@@ -320,7 +320,7 @@ def _get_optimization_cflags() -> List[str]:
         if not config.cpp.enable_floating_point_contract_flag:
             cflags.append("ffp-contract=off")
 
-        if not sys.platform == "darwin":
+        if sys.platform != "darwin":
             # https://stackoverflow.com/questions/65966969/why-does-march-native-not-work-on-apple-m1
             # `-march=native` is unrecognized option on M1
             if platform.machine() == "ppc64le":
