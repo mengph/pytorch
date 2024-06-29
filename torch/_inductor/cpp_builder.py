@@ -134,14 +134,10 @@ def cpp_compiler() -> str:
     return _get_cpp_compiler()
 
 
-def _is_gcc(cpp_compiler) -> bool:
-    if sys.platform == "darwin" and is_apple_clang():
-        return False
-    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler()))
-
-
-def is_gcc() -> bool:
-    return _is_gcc(_get_cpp_compiler())
+@functools.lru_cache(None)
+def _is_apple_clang(cpp_compiler) -> bool:
+    version_string = subprocess.check_output([cpp_compiler, "--version"]).decode("utf8")
+    return "Apple" in version_string.splitlines()[0]
 
 
 def _is_clang(cpp_compiler) -> bool:
@@ -151,15 +147,25 @@ def _is_clang(cpp_compiler) -> bool:
     return bool(re.search(r"(clang|clang\+\+)", cpp_compiler))
 
 
-def is_clang() -> bool:
-    compiler = _get_cpp_compiler()
-    return _is_clang(compiler)
+def _is_gcc(cpp_compiler) -> bool:
+    if sys.platform == "darwin" and _is_apple_clang(cpp_compiler):
+        return False
+    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler()))
 
 
 @functools.lru_cache(None)
-def is_apple_clang(cpp_compiler) -> bool:
-    version_string = subprocess.check_output([cpp_compiler, "--version"]).decode("utf8")
-    return "Apple" in version_string.splitlines()[0]
+def is_gcc() -> bool:
+    return _is_gcc(_get_cpp_compiler())
+
+
+@functools.lru_cache(None)
+def is_clang() -> bool:
+    return _is_clang(_get_cpp_compiler())
+
+
+@functools.lru_cache(None)
+def is_apple_clang() -> bool:
+    return _is_apple_clang(_get_cpp_compiler())
 
 
 def get_compiler_version_info(compiler: str) -> str:
@@ -677,7 +683,7 @@ def _get_openmp_args(cpp_compiler):
         cflags.append("fopenmp")
 
         # only Apple builtin compilers (Apple Clang++) require openmp
-        omp_available = not is_apple_clang(cpp_compiler)
+        omp_available = not _is_apple_clang(cpp_compiler)
 
         # check the `OMP_PREFIX` environment first
         omp_prefix = os.getenv("OMP_PREFIX")
