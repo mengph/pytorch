@@ -56,12 +56,12 @@ from torch._inductor.codegen.rocm.compile_command import (
     rocm_compile_command,
     rocm_compiler,
 )
-from torch._inductor.cpu_vec_isa import (
+from torch._inductor.cpp_builder import (
+    _set_gpu_runtime_env,
+    _transform_cuda_paths,
     get_compiler_version_info,
-    invalid_vec_isa,
-    pick_vec_isa,
-    VecISA,
 )
+from torch._inductor.cpu_vec_isa import invalid_vec_isa, pick_vec_isa, VecISA
 from torch._inductor.runtime.compile_tasks import (
     _module_to_triton_kernel,
     _reload_python_module,
@@ -1178,6 +1178,11 @@ class CompiledFxGraph:
         return self.current_callable(inputs)
 
 
+"""
+TODO: will remove old cpp builder when we switch to the new one.
+"""
+
+
 def get_compile_only(compile_only: bool = True) -> str:
     return "-c" if compile_only else ""
 
@@ -1277,85 +1282,21 @@ def use_standard_sys_dir_headers() -> str:
         return ""
 
 
-@functools.lru_cache(None)
-def is_conda_llvm_openmp_installed() -> bool:
-    try:
-        command = "conda list llvm-openmp --json"
-        output = subprocess.check_output(command.split()).decode("utf8")
-        return len(json.loads(output)) > 0
-    except subprocess.SubprocessError:
-        return False
-
-
-@functools.lru_cache(None)
-def homebrew_libomp() -> Tuple[bool, str]:
-    try:
-        # check if `brew` is installed
-        subprocess.check_output(["which", "brew"])
-        # get the location of `libomp` if it is installed
-        # this is the location that `libomp` **would** be installed
-        # see https://github.com/Homebrew/brew/issues/10261#issuecomment-756563567 for details
-        libomp_path = (
-            subprocess.check_output(["brew", "--prefix", "libomp"])
-            .decode("utf8")
-            .strip()
-        )
-        # check if `libomp` is installed
-        omp_available = os.path.exists(libomp_path)
-        return omp_available, libomp_path
-    except subprocess.SubprocessError:
-        return False, ""
-
-
-def _set_gpu_runtime_env() -> None:
-    if (
-        config.is_fbcode()
-        and torch.version.hip is None
-        and "CUDA_HOME" not in os.environ
-        and "CUDA_PATH" not in os.environ
-    ):
-        os.environ["CUDA_HOME"] = build_paths.cuda()
-
-
-def _get_python_include_dirs():
-    include_dir = Path(sysconfig.get_path("include"))
-    # On Darwin Python executable from a framework can return
-    # non-existing /Library/Python/... include path, in which case
-    # one should use Headers folder from the framework
-    if not include_dir.exists() and platform.system() == "Darwin":
-        std_lib = Path(sysconfig.get_path("stdlib"))
-        include_dir = (std_lib.parent.parent / "Headers").absolute()
-    if not (include_dir / "Python.h").exists():
-        warnings.warn(f"Can't find Python.h in {str(include_dir)}")
-    return [str(include_dir)]
-
-
-def _transform_cuda_paths(lpaths):
-    # This handles two cases:
-    # 1. Meta internal cuda-12 where libs are in lib/cuda-12 and lib/cuda-12/stubs
-    # 2. Linux machines may have CUDA installed under either lib64/ or lib/
-    for i, path in enumerate(lpaths):
-        if (
-            "CUDA_HOME" in os.environ
-            and path.startswith(os.environ["CUDA_HOME"])
-            and not os.path.exists(f"{path}/libcudart_static.a")
-        ):
-            for root, dirs, files in os.walk(path):
-                if "libcudart_static.a" in files:
-                    lpaths[i] = os.path.join(path, root)
-                    lpaths.append(os.path.join(lpaths[i], "stubs"))
-                    break
-
-
 def get_include_and_linking_paths(
     include_pytorch: bool = False,
     vec_isa: VecISA = invalid_vec_isa,
     cuda: bool = False,
     aot_mode: bool = False,
 ) -> Tuple[List[str], str, str, str, str]:
+    from .cpp_builder import (
+        _get_python_include_dirs,
+        homebrew_libomp,
+        is_apple_clang,
+        is_conda_llvm_openmp_installed,
+    )
+
     _set_gpu_runtime_env()
     from torch.utils import cpp_extension
-    from .cpp_builder import is_apple_clang
 
     # Remove below in the further
     # macros = "-D {}".format(vec_isa.build_macro()) if vec_isa != invalid_vec_isa else ""
