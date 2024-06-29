@@ -92,7 +92,7 @@ def cpp_compiler_search(search: str) -> str:
             return cxx
         except (subprocess.SubprocessError, FileNotFoundError, ImportError):
             continue
-    raise exc.InvalidCxxCompiler()  # noqa: RSE102
+    raise exc.InvalidCxxCompiler
 
 
 def install_gcc_via_conda() -> str:
@@ -140,7 +140,9 @@ def cpp_compiler() -> str:
 
 
 def _is_gcc(cpp_compiler) -> bool:
-    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler))
+    if sys.platform == "darwin" and is_apple_clang():
+        return False
+    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler()))
 
 
 def is_gcc() -> bool:

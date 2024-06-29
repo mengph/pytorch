@@ -1178,94 +1178,13 @@ class CompiledFxGraph:
         return self.current_callable(inputs)
 
 
-def cpp_compiler() -> str:
-    if config.is_fbcode():
-        return build_paths.cc() if torch.version.hip is None else build_paths.clang()
-    if isinstance(config.cpp.cxx, (list, tuple)):
-        search = tuple(config.cpp.cxx)
-    else:
-        search = (config.cpp.cxx,)
-    return cpp_compiler_search(search)
-
-
-@functools.lru_cache(1)
-def cpp_compiler_search(search: str) -> str:
-    for cxx in search:
-        try:
-            if cxx is None:
-                # gxx package is only available for Linux
-                # according to https://anaconda.org/conda-forge/gxx/
-                if sys.platform != "linux":
-                    continue
-                # Do not install GXX by default
-                if not os.getenv("TORCH_INDUCTOR_INSTALL_GXX"):
-                    continue
-                from filelock import FileLock
-
-                lock_dir = get_lock_dir()
-                lock = FileLock(
-                    os.path.join(lock_dir, "g++.lock"), timeout=LOCK_TIMEOUT
-                )
-                with lock:
-                    cxx = install_gcc_via_conda()
-            subprocess.check_output([cxx, "--version"])
-            return cxx
-        except (subprocess.SubprocessError, FileNotFoundError, ImportError):
-            continue
-    raise exc.InvalidCxxCompiler
-
-
-def install_gcc_via_conda() -> str:
-    """On older systems, this is a quick way to get a modern compiler"""
-    prefix = os.path.join(cache_dir(), "gcc")
-    cxx_path = os.path.join(prefix, "bin", "g++")
-    if not os.path.exists(cxx_path):
-        log.info("Downloading GCC via conda")
-        conda = os.environ.get("CONDA_EXE", "conda")
-        if conda is None:
-            conda = shutil.which("conda")
-        if conda is not None:
-            subprocess.check_call(
-                [
-                    conda,
-                    "create",
-                    f"--prefix={prefix}",
-                    "--channel=conda-forge",
-                    "--quiet",
-                    "-y",
-                    "python=3.8",
-                    "gxx",
-                ],
-                stdout=subprocess.PIPE,
-            )
-    return cxx_path
-
-
-def is_gcc() -> bool:
-    if sys.platform == "darwin" and is_apple_clang():
-        return False
-    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler()))
-
-
-@functools.lru_cache(None)
-def is_apple_clang() -> bool:
-    cxx = cpp_compiler()
-    version_string = subprocess.check_output([cxx, "--version"]).decode("utf8")
-    return "Apple" in version_string.splitlines()[0]
-
-
-def is_clang() -> bool:
-    # Mac OS apple clang maybe named as gcc, need check compiler info.
-    if sys.platform == "darwin":
-        return is_apple_clang()
-    return bool(re.search(r"(clang|clang\+\+)", cpp_compiler()))
-
-
 def get_compile_only(compile_only: bool = True) -> str:
     return "-c" if compile_only else ""
 
 
 def get_shared(shared: bool = True, compile_only: bool = False) -> str:
+    from .cpp_builder import cpp_compiler
+
     if not shared:
         return ""
     if compile_only:
@@ -1286,6 +1205,8 @@ def get_glibcxx_abi_build_flags() -> str:
 
 
 def cpp_flags() -> str:
+    from .cpp_builder import is_clang
+
     flags = ["-std=c++17", "-Wno-unused-variable", "-Wno-unknown-pragmas"]
     if is_clang():
         flags.append("-Werror=ignored-optimization-argument")
@@ -1434,6 +1355,7 @@ def get_include_and_linking_paths(
 ) -> Tuple[List[str], str, str, str, str]:
     _set_gpu_runtime_env()
     from torch.utils import cpp_extension
+    from .cpp_builder import is_apple_clang
 
     # Remove below in the further
     # macros = "-D {}".format(vec_isa.build_macro()) if vec_isa != invalid_vec_isa else ""
@@ -1616,6 +1538,8 @@ def cpp_compile_command(
     use_mmap_weights: bool = False,
     extra_flags: Sequence[str] = (),
 ) -> str:
+    from .cpp_builder import cpp_compiler, is_clang
+
     ipaths, lpaths, libs, macros, build_arch_flags = get_include_and_linking_paths(
         include_pytorch, vec_isa, cuda, aot_mode
     )
@@ -1726,6 +1650,8 @@ class AotCodeCompiler:
         serialized_extern_kernel_nodes: Optional[str],
         cuda: bool,
     ) -> str:
+        from .cpp_builder import cpp_compiler
+
         picked_vec_isa = pick_vec_isa()
         cpp_command = repr(
             cpp_compile_command(
