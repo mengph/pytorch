@@ -21,9 +21,6 @@ from typing import List, Sequence, Tuple, Union
 
 import torch
 from torch._inductor import config, exc
-
-# TODO: import below objects in function scope, in further optimization
-from torch._inductor.codecache import _LINKER_SCRIPT, get_lock_dir, LOCK_TIMEOUT
 from torch._inductor.cpu_vec_isa import invalid_vec_isa, VecISA
 from torch._inductor.runtime.runtime_utils import cache_dir
 
@@ -66,6 +63,8 @@ log = logging.getLogger(__name__)
 # =============================== toolchain ===============================
 @functools.lru_cache(1)
 def cpp_compiler_search(search: str) -> str:
+    from torch._inductor.codecache import get_lock_dir, LOCK_TIMEOUT
+
     for cxx in search:
         try:
             if cxx is None:
@@ -504,6 +503,8 @@ def _setup_standard_sys_libs(
     aot_mode: bool,
     use_absolute_path: bool,
 ):
+    from torch._inductor.codecache import _LINKER_SCRIPT
+
     cflags: List[str] = []
     include_dirs: List[str] = []
     passthough_args: List[str] = []

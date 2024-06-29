@@ -56,9 +56,17 @@ from torch._inductor.codegen.rocm.compile_command import (
     rocm_compile_command,
     rocm_compiler,
 )
+
+"""
+codecache.py, cpp_builder.py and cpu_vec_isa.py import rule:
+https://github.com/pytorch/pytorch/issues/124245#issuecomment-2197778902
+"""
 from torch._inductor.cpp_builder import (
     _set_gpu_runtime_env,
     _transform_cuda_paths,
+    CppBuilder,
+    CppOptions,
+    CppTorchCudaOptions,
     get_compiler_version_info,
 )
 from torch._inductor.cpu_vec_isa import invalid_vec_isa, pick_vec_isa, VecISA
@@ -2381,8 +2389,6 @@ def _do_validate_cpp_commands(
         extra_flags=extra_flags,
     ).split(" ")
 
-    from torch._inductor.cpp_builder import CppBuilder, CppTorchCudaOptions
-
     dummy_build_option = CppTorchCudaOptions(
         vec_isa=picked_isa,
         include_pytorch=include_pytorch,
@@ -2477,8 +2483,6 @@ class HalideCodeCache(CppPythonBindingsCodeCache):
     @classmethod
     @functools.lru_cache(None)
     def config_hash(cls):
-        from torch._inductor.cpp_builder import CppBuilder, CppOptions
-
         command_gen = CppBuilder(
             name="O",
             sources="I",
