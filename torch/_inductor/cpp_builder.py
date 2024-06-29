@@ -116,7 +116,7 @@ def install_gcc_via_conda() -> str:
     return cxx_path
 
 
-def _get_cpp_compiler() -> str:
+def get_cpp_compiler() -> str:
     if _IS_WINDOWS:
         compiler = os.environ.get("CXX", "cl")
     else:
@@ -130,10 +130,6 @@ def _get_cpp_compiler() -> str:
     return compiler
 
 
-def cpp_compiler() -> str:
-    return _get_cpp_compiler()
-
-
 @functools.lru_cache(None)
 def _is_apple_clang(cpp_compiler) -> bool:
     version_string = subprocess.check_output([cpp_compiler, "--version"]).decode("utf8")
@@ -143,29 +139,29 @@ def _is_apple_clang(cpp_compiler) -> bool:
 def _is_clang(cpp_compiler) -> bool:
     # Mac OS apple clang maybe named as gcc, need check compiler info.
     if sys.platform == "darwin":
-        return is_apple_clang(cpp_compiler)
+        return _is_apple_clang(cpp_compiler)
     return bool(re.search(r"(clang|clang\+\+)", cpp_compiler))
 
 
 def _is_gcc(cpp_compiler) -> bool:
     if sys.platform == "darwin" and _is_apple_clang(cpp_compiler):
         return False
-    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler()))
+    return bool(re.search(r"(gcc|g\+\+)", cpp_compiler))
 
 
 @functools.lru_cache(None)
 def is_gcc() -> bool:
-    return _is_gcc(_get_cpp_compiler())
+    return _is_gcc(get_cpp_compiler())
 
 
 @functools.lru_cache(None)
 def is_clang() -> bool:
-    return _is_clang(_get_cpp_compiler())
+    return _is_clang(get_cpp_compiler())
 
 
 @functools.lru_cache(None)
 def is_apple_clang() -> bool:
-    return _is_apple_clang(_get_cpp_compiler())
+    return _is_apple_clang(get_cpp_compiler())
 
 
 def get_compiler_version_info(compiler: str) -> str:
@@ -371,7 +367,7 @@ def _get_shared_cflag(compile_only: bool) -> List[str]:
     else:
         if compile_only:
             return ["fPIC"]
-        if platform.system() == "Darwin" and "clang" in _get_cpp_compiler():
+        if platform.system() == "Darwin" and "clang" in get_cpp_compiler():
             # This causes undefined symbols to behave the same as linux
             return ["shared", "fPIC", "undefined dynamic_lookup"]
         else:
@@ -434,7 +430,7 @@ class CppOptions(BuildOptionsBase):
         use_absolute_path: bool = False,
     ) -> None:
         super().__init__()
-        self._compiler = _get_cpp_compiler()
+        self._compiler = get_cpp_compiler()
         self._use_absolute_path = use_absolute_path
         self._compile_only = compile_only
 

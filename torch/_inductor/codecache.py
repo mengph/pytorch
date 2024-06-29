@@ -1196,13 +1196,13 @@ def get_compile_only(compile_only: bool = True) -> str:
 
 
 def get_shared(shared: bool = True, compile_only: bool = False) -> str:
-    from .cpp_builder import cpp_compiler
+    from .cpp_builder import get_cpp_compiler
 
     if not shared:
         return ""
     if compile_only:
         return "-fPIC"
-    if platform.system() == "Darwin" and "clang" in cpp_compiler():
+    if platform.system() == "Darwin" and "clang" in get_cpp_compiler():
         # This causes undefined symbols to behave the same as linux
         return "-shared -fPIC -undefined dynamic_lookup"
     else:
@@ -1487,7 +1487,7 @@ def cpp_compile_command(
     use_mmap_weights: bool = False,
     extra_flags: Sequence[str] = (),
 ) -> str:
-    from .cpp_builder import cpp_compiler, is_clang
+    from .cpp_builder import get_cpp_compiler, is_clang
 
     ipaths, lpaths, libs, macros, build_arch_flags = get_include_and_linking_paths(
         include_pytorch, vec_isa, cuda, aot_mode
@@ -1527,7 +1527,7 @@ def cpp_compile_command(
         r"[ \n]+",
         " ",
         f"""
-            {cpp_compiler()} {inp_name_str} {get_shared(shared, compile_only)}
+            {get_cpp_compiler()} {inp_name_str} {get_shared(shared, compile_only)}
             {get_warning_all_flag(warning_all)} {cpp_flags()}
             {get_glibcxx_abi_build_flags()}
             {ipaths_str} {lpaths} {libs} {build_arch_flags}
@@ -1599,7 +1599,7 @@ class AotCodeCompiler:
         serialized_extern_kernel_nodes: Optional[str],
         cuda: bool,
     ) -> str:
-        from .cpp_builder import cpp_compiler
+        from .cpp_builder import get_cpp_compiler
 
         picked_vec_isa = pick_vec_isa()
         cpp_command = repr(
@@ -1745,7 +1745,7 @@ class AotCodeCompiler:
                 specified_dir=specified_output_path,
             )
             consts_o = os.path.splitext(consts_path)[0] + ".o"
-            cmd = f"{cpp_compiler()} -c -o {consts_o} {consts_path}"
+            cmd = f"{get_cpp_compiler()} -c -o {consts_o} {consts_path}"
             run_command_and_check(cmd)
             if is_large_consts:
                 with open(consts_o, "r+b") as f:
