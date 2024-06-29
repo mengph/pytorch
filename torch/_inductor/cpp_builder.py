@@ -675,8 +675,6 @@ def _get_openmp_args(cpp_compiler):
         cflags.append("Xclang")
         cflags.append("fopenmp")
 
-        from torch._inductor.codecache import is_conda_llvm_openmp_installed
-
         # only Apple builtin compilers (Apple Clang++) require openmp
         omp_available = not is_apple_clang(cpp_compiler)
 
