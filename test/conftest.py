@@ -255,7 +255,7 @@ def pytest_collection_modifyitems(items: List[Any]) -> None:
     """
     yes = []
     for item in items:
-        if item in l:
+        if item.nodeid in l:
             yes.append(l)
     items.clear()
     items.extend(yes)
