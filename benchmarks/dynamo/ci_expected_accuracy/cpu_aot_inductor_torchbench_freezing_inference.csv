@@ -6,7 +6,7 @@ torchrec_dlrm,eager_fail_to_run,0
 
 
 
-BERT_pytorch,pass,0
+BERT_pytorch,fail_to_run,0
 
 
 
@@ -14,7 +14,7 @@ Background_Matting,pass_due_to_skip,0
 
 
 
-DALLE2_pytorch,pass,12
+DALLE2_pytorch,fail_to_run,0
 
 
 
@@ -34,7 +34,7 @@ basic_gnn_edgecnn,pass,0
 
 
 
-basic_gnn_gcn,pass,6
+basic_gnn_gcn,pass,0
 
 
 
@@ -42,11 +42,7 @@ basic_gnn_gin,pass,0
 
 
 
-basic_gnn_sage,pass,0
-
-
-
-cm3leon_generate,pass,4
+basic_gnn_sage,fail_to_run,0
 
 
 
@@ -54,7 +50,7 @@ dcgan,pass,0
 
 
 
-demucs,pass,3
+demucs,pass,0
 
 
 
@@ -62,67 +58,59 @@ densenet121,pass,0
 
 
 
-detectron2_fasterrcnn_r_101_c4,eager_fail_to_run,0
+detectron2_fasterrcnn_r_101_c4,fail_to_run,0
 
 
 
-detectron2_fasterrcnn_r_101_dc5,eager_fail_to_run,0
+detectron2_fasterrcnn_r_101_dc5,fail_to_run,0
 
 
 
-detectron2_fasterrcnn_r_101_fpn,eager_fail_to_run,0
+detectron2_fasterrcnn_r_101_fpn,fail_to_run,0
 
 
 
-detectron2_fasterrcnn_r_50_c4,eager_fail_to_run,0
+detectron2_fasterrcnn_r_50_c4,fail_to_run,0
 
 
 
-detectron2_fasterrcnn_r_50_dc5,eager_fail_to_run,0
+detectron2_fasterrcnn_r_50_dc5,fail_to_run,0
 
 
 
-detectron2_fasterrcnn_r_50_fpn,eager_fail_to_run,0
+detectron2_fasterrcnn_r_50_fpn,fail_to_run,0
 
 
 
-detectron2_fcos_r_50_fpn,pass,21
+detectron2_maskrcnn_r_101_c4,fail_to_run,0
 
 
 
-detectron2_maskrcnn_r_101_c4,eager_fail_to_run,0
+detectron2_maskrcnn_r_101_fpn,fail_to_run,0
 
 
 
-detectron2_maskrcnn_r_101_fpn,eager_fail_to_run,0
+detectron2_maskrcnn_r_50_c4,fail_to_run,0
 
 
 
-detectron2_maskrcnn_r_50_c4,eager_fail_to_run,0
+detectron2_maskrcnn_r_50_fpn,fail_to_run,0
 
 
 
-detectron2_maskrcnn_r_50_fpn,eager_fail_to_run,0
+dlrm,fail_to_run,0
 
 
 
-dlrm,pass,0
+doctr_det_predictor,fail_to_run,0
 
 
 
-doctr_det_predictor,pass,5
+doctr_reco_predictor,fail_to_run,0
 
 
 
-doctr_reco_predictor,pass,4
-
-
-
-drq,pass,0
-
-
-
-fastNLP_Bert,pass,4
+drq,fail_to_run,0
 
 
 
@@ -150,7 +138,7 @@ hf_Bert_large,pass,0
 
 
 
-hf_BigBird,fail_accuracy,43
+hf_BigBird,fail_to_run,0
 
 
 
@@ -166,19 +154,11 @@ hf_GPT2_large,pass_due_to_skip,0
 
 
 
-hf_Reformer,pass,5
-
-
-
 hf_T5,pass,0
 
 
 
-hf_T5_base,eager_fail_to_run,0
-
-
-
-hf_T5_generate,pass,5
+hf_T5_base,pass,0
 
 
 
@@ -198,7 +178,7 @@ lennard_jones,pass,0
 
 
 
-llama,pass,0
+llama,fail_to_run,0
 
 
 
@@ -226,7 +206,7 @@ mobilenet_v2,pass,0
 
 
 
-mobilenet_v2_quantized_qat,model_fail_to_load,0
+mobilenet_v2_quantized_qat,fail_to_run,0
 
 
 
@@ -234,11 +214,11 @@ mobilenet_v3_large,pass,0
 
 
 
-moco,pass,5
+moco,fail_to_run,0
 
 
 
-moondream,model_fail_to_load,0
+moondream,pass,0
 
 
 
@@ -247,10 +227,6 @@ nanogpt,pass,0
 
 
 nvidia_deeprecommender,pass,0
-
-
-
-opacus_cifar10,pass,0
 
 
 
@@ -298,7 +274,7 @@ resnet50,pass,0
 
 
 
-resnet50_quantized_qat,model_fail_to_load,0
+resnet50_quantized_qat,fail_to_run,0
 
 
 
@@ -306,11 +282,11 @@ resnext50_32x4d,pass,0
 
 
 
-sam,pass,0
+sam,fail_to_run,0
 
 
 
-sam_fast,pass,0
+sam_fast,fail_to_run,0
 
 
 
@@ -318,11 +294,7 @@ shufflenet_v2_x1_0,pass,0
 
 
 
-soft_actor_critic,pass,0
-
-
-
-speech_transformer,pass,10
+soft_actor_critic,fail_to_run,0
 
 
 
@@ -338,7 +310,15 @@ stable_diffusion_unet,pass_due_to_skip,0
 
 
 
+timm_efficientdet,model_fail_to_load,0
+
+
+
 timm_efficientnet,pass,0
+
+
+
+timm_nfnet,pass,0
 
 
 
@@ -366,7 +346,7 @@ torch_multimodal_clip,pass,0
 
 
 
-tts_angular,pass,2
+tts_angular,fail_to_run,0
 
 
 
@@ -374,8 +354,8 @@ vgg16,pass,0
 
 
 
-vision_maskrcnn,pass,17
+vision_maskrcnn,fail_to_run,0
 
 
 
-yolov3,pass,2
+yolov3,pass,0
