@@ -341,20 +341,6 @@ class VariableBuilder:
             return True
         return False
 
-    @staticmethod
-    @functools.lru_cache(None)
-    def _common_constants():
-        return {
-            # We zero-one specialize shapes, so specialize these constants
-            # too
-            0,
-            1,
-            # NB: There used to be more constants here, but honestly it was
-            # pretty confusing.  Note we specialize floats by default, and
-            # DON'T specialize ints by default.  This all only matters with
-            # dynamic_shapes
-        }
-
     def get_source(self):
         return self.source
 
@@ -1248,9 +1234,8 @@ class VariableBuilder:
             # unspecializing int by default, but still
             # specialize for the following conditions
             if not TracingContext.get().force_unspec_int_unbacked_size_like and (
-                value in self._common_constants()
                 # Assume integers from global variables want to be specialized
-                or not self.source.guard_source().is_local()
+                not self.source.guard_source().is_local()
                 # Assume that integers that came from NN modules want to be
                 # specialized (as we don't expect users to be changing the
                 # NN modules on the fly)
